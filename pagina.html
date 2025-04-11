@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CultivAI</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/x-icon" href="logo.svg">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+
+<body>
+    <header>
+        <a href="main.html">
+            <img src="logo.svg" alt="CultivAi Logo">
+        </a>
+    </header>
+
+    <div id="map-container">
+        <div id="map"></div>
+        <div class="overlay">
+            <h1>Predicción de Cultivos</h1>
+            <p>Selecciona un punto en el mapa para obtener predicciones de cultivos.</p>
+            <p>Haz clic en el mapa para seleccionar coordenadas.</p>
+
+            <div class="overlay-controls">
+                <div>
+                    <label for="year">Año:</label>
+                    <select id="year">
+                        <option value="2022">2022</option>
+                        <option value="2023">2023</option>
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                        <option value="2027">2027</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="month">Mes:</label>
+                    <select id="month">
+                        <option value="1">Enero</option>
+                        <option value="2">Febrero</option>
+                        <option value="3">Marzo</option>
+                        <option value="4">Abril</option>
+                        <option value="5">Mayo</option>
+                        <option value="6">Junio</option>
+                        <option value="7">Julio</option>
+                        <option value="8">Agosto</option>
+                        <option value="9">Septiembre</option>
+                        <option value="10">Octubre</option>
+                        <option value="11">Noviembre</option>
+                        <option value="12">Diciembre</option>
+                    </select>
+                </div>
+                <button id="generate-prediction" onclick="obtenerPredicciones()">Obtener Predicción</button>
+            </div>
+
+            <div class="overlay-coords" id="coordenadas">
+                Coordenadas no seleccionadas
+            </div>
+
+            <div class="overlay-results" id="resultados"></div>
+
+            <div id="cultivo-container" style="display: none;">
+                <div class="overlay-cultivo">
+                    <label for="cultivo-input">Ingresa el cultivo deseado:</label>
+                    <input type="text" id="cultivo-input" placeholder="Nombre del cultivo">
+                    <button id="analizar-cultivo" onclick="analizarCultivo()">Analizar</button>
+                </div>
+                <div class="overlay-cultivo-result" id="cultivo-result"></div>
+            </div>
+
+        </div>
+
+        <footer>
+            &copy; 2025 CultivAi. Todos los derechos reservados.
+        </footer>
+
+        <script>
+            const map = L.map('map').setView([19.5, -96.5], 10);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+            }).addTo(map);
+
+            let selectedLat, selectedLng;
+            let currentMarker;
+            let prediccionesData = null;
+
+            map.on('click', function (e) {
+                selectedLat = e.latlng.lat.toFixed(2);
+                selectedLng = e.latlng.lng.toFixed(2);
+
+                document.getElementById('coordenadas').innerHTML = `Lat: ${selectedLat}, Lon: ${selectedLng}`;
+
+                if (currentMarker) {
+                    map.removeLayer(currentMarker);
+                }
+
+                currentMarker = L.marker([selectedLat, selectedLng]).addTo(map)
+                    .bindPopup(`Lat: ${selectedLat}<br>Lon: ${selectedLng}`)
+                    .openPopup();
+            });
+
+            function obtenerPredicciones() {
+                const year = document.getElementById('year').value;
+                const month = document.getElementById('month').value;
+
+                if (selectedLat !== undefined && selectedLng !== undefined) {
+                    fetch('http://127.0.0.1:5000/predicciones', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            lat: selectedLat,
+                            lon: selectedLng,
+                            year: year,
+                            month: month
+                        })
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            mostrarResultados(data);
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        });
+                } else {
+                    alert("Por favor, selecciona primero las coordenadas en el mapa.");
+                }
+            }
+
+            function mostrarResultados(data) {
+                prediccionesData = data;
+                let resultadosHTML = "<h2>Resultados de Predicción:</h2><ul>";
+                for (const [variable, valor] of Object.entries(data)) {
+                    resultadosHTML += `<li><strong>${variable}:</strong> ${valor}</li>`;
+                }
+                resultadosHTML += "</ul>";
+                document.getElementById('resultados').innerHTML = resultadosHTML;
+
+                document.getElementById('cultivo-container').style.display = 'block';
+            }
+
+            function analizarCultivo() {
+                const cultivo = document.getElementById('cultivo-input').value;
+                if (cultivo.trim() === "") {
+                    alert("Por favor ingresa un cultivo.");
+                    return;
+                }
+                if (!prediccionesData) {
+                    alert("No se han obtenido datos de predicción aún.");
+                    return;
+                }
+
+                const payload = {
+                    cultivo: cultivo,
+                    predicciones: prediccionesData
+                };
+
+                fetch('http://127.0.0.1:5000/cultivo', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        mostrarCultivoResultado(data);
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+            }
+
+            function mostrarCultivoResultado(data) {
+                let resultHTML = "<h2>Resultado del Cultivo:</h2><ul>";
+                for (const [variable, valor] of Object.entries(data)) {
+                    resultHTML += `<li><strong>${variable}:</strong> ${valor}</li>`;
+                }
+                resultHTML += "</ul>";
+                document.getElementById('cultivo-result').innerHTML = resultHTML;
+            }
+        </script>
+    </div>
+</body>
+
+</html>

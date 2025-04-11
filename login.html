@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - CultivAi</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            background: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        header,
+        footer {
+            width: 100%;
+            background: #000000;
+            color: #fff;
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        header a {
+            display: inline-block;
+        }
+
+        header img {
+            max-height: 50px;
+            width: auto;
+            transition: opacity 0.3s ease;
+        }
+
+        header a:hover img {
+            opacity: 0.8;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .login-container {
+            background: #fff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .login-container h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .login-container button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            background: #000000;
+            color: #fff;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .login-container button:hover {
+            background: #0056b3;
+        }
+
+        #errorMessage {
+            margin-top: 10px;
+            color: red;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <a href="main.html">
+            <img src="logo.svg" alt="CultivAi Logo">
+        </a>
+    </header>
+
+    <main>
+        <section class="login-container">
+            <h2>Iniciar Sesión</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Usuario</label>
+                    <input type="text" id="username" placeholder="Usuario" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" placeholder="Contraseña" required>
+                </div>
+                <button type="submit">Ingresar</button>
+            </form>
+            <div id="errorMessage">Usuario o contraseña incorrectos</div>
+        </section>
+    </main>
+
+    <footer>
+        &copy; 2025 CultivAi. Todos los derechos reservados.
+    </footer>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (username === 'admin' && password === 'root') {
+                window.location.href = 'pagina.html';
+            } else {
+                document.getElementById('errorMessage').style.display = 'block';
+            }
+        });
+    </script>
+</body>
+
+</html>
